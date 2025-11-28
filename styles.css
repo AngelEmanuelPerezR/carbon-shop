@@ -1,0 +1,104 @@
+:root {
+  --bg-dark: #121212;
+  --card-dark: #1c1c1c;
+  --gold: #c9a14a;
+  --gold-soft: #f0d28a;
+  --text-light: #f5f5f5;
+  --muted: #b0b0b0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* LOGO */
+.logo-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffa726, #d84315 60%, #212121 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* CARDS */
+.card-dark-gold {
+  background: radial-gradient(circle at 0 0, #2c2c2c, #181818);
+  border: 1px solid rgba(201, 161, 74, 0.35);
+  color: var(--text-light);
+}
+
+.card-dark-gold .card-header {
+  background: linear-gradient(90deg, #222, #181818);
+  border-bottom: 1px solid rgba(201, 161, 74, 0.3);
+}
+
+/* TABLAS */
+.table-header-gold {
+  background: linear-gradient(90deg, rgba(201, 161, 74, 0.25), transparent);
+}
+
+.table-dark tbody tr:hover {
+  background-color: rgba(201, 161, 74, 0.1);
+}
+
+/* HIGHLIGHT para filas actualizadas */
+.row-highlight {
+  animation: highlightRow 1.2s ease-out;
+}
+
+@keyframes highlightRow {
+  0% {
+    background-color: rgba(201, 161, 74, 0.6);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* FOOTER */
+.footer-dark-gold {
+  background: #101010;
+  border-top: 1px solid rgba(201, 161, 74, 0.35);
+}
+
+/* MENSAJES */
+#updateProductMessage,
+#changeStatusMessage,
+#resumenMessage,
+#lastOrdersMessage,
+#inventoryMessage {
+  min-height: 1.25rem;
+}
+
+/* NOTIFICACIONES */
+#notificationsList li {
+  padding: 6px 10px;
+  border-left: 3px solid var(--gold);
+  margin-bottom: 6px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+#notificationsList li span.badge {
+  font-size: 0.7rem;
+}
+
+/* PEQUEÑOS AJUSTES */
+code {
+  color: var(--gold-soft);
+}
+
+.btn-warning {
+  background-color: var(--gold);
+  border-color: var(--gold);
+}
+
+.btn-warning:hover {
+  background-color: #b68e34;
+  border-color: #b68e34;
+}

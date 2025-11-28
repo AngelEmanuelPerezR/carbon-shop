@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Carbon-Shop | Panel de Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Favicon alusivo a carbón y ventas (coloca un ícono de carbón / carrito) -->
+ <!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="favicon-fire.svg" />
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Estilos personalizados -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+        <span class="logo-circle me-2">🔥</span>
+        Carbon-Shop
+      </a>
+      <span class="navbar-text text-warning small">
+        Panel de administración de pedidos y productos
+      </span>
+    </div>
+  </nav>
+
+  <main class="py-4">
+    <div class="container">
+
+      <!-- INVENTARIO -->
+      <section class="mb-4">
+        <div class="card card-dark-gold shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Inventario actual</h5>
+            <button id="btnReloadInventory" class="btn btn-sm btn-outline-warning">
+              Recargar inventario
+            </button>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small mb-2">
+              Datos obtenidos de <code>/api/inventario</code>
+            </p>
+            <div class="table-responsive">
+              <table class="table table-dark table-striped align-middle mb-0">
+                <thead class="table-header-gold">
+                  <tr>
+                    <th>Producto</th>
+                    <th>Descripción</th>
+                    <th>Costo ($)</th>
+                    <th>Existencia</th>
+                    <th class="text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                  <!-- Filas del inventario (JS) -->
+                </tbody>
+              </table>
+            </div>
+            <div id="inventoryMessage" class="mt-2 small text-warning"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ACTUALIZAR PRODUCTO -->
+      <section class="mb-4">
+        <div class="card card-dark-gold shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-0">Actualizar producto</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Selecciona un producto desde la tabla de inventario (botón <strong>Actualizar</strong>).  
+              Solo podrás modificar <strong>costo</strong> y <strong>unidades en existencia</strong>.  
+              El <code>nombre_producto</code> se envía automáticamente y el usuario no lo puede cambiar.
+            </p>
+
+            <form id="updateProductForm" class="row gy-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">Producto seleccionado</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="selectedProductName"
+                  placeholder="Sin seleccionar"
+                  readonly
+                />
+                <!-- nombre_producto real que se enviará al endpoint -->
+                <input type="hidden" id="hiddenProductName" />
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="nuevoCosto" class="form-label">Nuevo costo ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  class="form-control"
+                  id="nuevoCosto"
+                  placeholder="Ej. 40.00"
+                />
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="nuevasUnidades" class="form-label">Nuevas unidades</label>
+                <input
+                  type="number"
+                  min="0"
+                  class="form-control"
+                  id="nuevasUnidades"
+                  placeholder="Ej. 250"
+                />
+              </div>
+
+              <div class="col-12 d-flex justify-content-end">
+                <button type="submit" class="btn btn-warning">
+                  Guardar cambios
+                </button>
+              </div>
+            </form>
+
+            <div id="updateProductMessage" class="mt-2 small"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CAMBIAR ESTADO DEL PEDIDO -->
+      <section class="mb-4">
+        <div class="card card-dark-gold shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-0">Cambiar estado de pedido</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Endpoint: <code>/api/pedidos/cambiar-estado</code>  
+              Solo puedes elegir entre: <strong>PENDIENTE</strong>, <strong>PAGADO</strong>, <strong>CANCELADO</strong>.
+            </p>
+
+            <form id="changeStatusForm" class="row gy-3">
+              <div class="col-12 col-md-4">
+                <label for="pedidoIdEstado" class="form-label">ID de pedido</label>
+                <input
+                  type="number"
+                  min="1"
+                  class="form-control"
+                  id="pedidoIdEstado"
+                  placeholder="Ej. 1"
+                  required
+                />
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="nuevoEstado" class="form-label">Nuevo estado</label>
+                <select id="nuevoEstado" class="form-select" required>
+                  <option value="" selected disabled>Selecciona estado</option>
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="PAGADO">PAGADO</option>
+                  <option value="CANCELADO">CANCELADO</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-md-4 d-flex align-items-end justify-content-end">
+                <button type="submit" class="btn btn-warning w-100">
+                  Actualizar estado
+                </button>
+              </div>
+            </form>
+
+            <div id="changeStatusMessage" class="mt-2 small"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESUMEN DE PEDIDO -->
+      <section class="mb-4">
+        <div class="card card-dark-gold shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-0">Resumen de pedido</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Endpoint: <code>/api/pedidos/resumen</code>  
+              Ingresa el ID de pedido para ver la información principal.
+            </p>
+
+            <form id="resumenForm" class="row gy-3 mb-3">
+              <div class="col-12 col-md-4">
+                <label for="pedidoIdResumen" class="form-label">ID de pedido</label>
+                <input
+                  type="number"
+                  min="1"
+                  class="form-control"
+                  id="pedidoIdResumen"
+                  placeholder="Ej. 1"
+                  required
+                />
+              </div>
+              <div class="col-12 col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-warning">
+                  Obtener resumen
+                </button>
+              </div>
+            </form>
+
+            <div class="table-responsive d-none" id="resumenTableWrapper">
+              <table class="table table-dark table-striped align-middle mb-0">
+                <thead class="table-header-gold">
+                  <tr>
+                    <th>ID Pedido</th>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th>Costo total ($)</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="resumenTableBody">
+                  <!-- Fila generada por JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <div id="resumenMessage" class="mt-2 small"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTIFICACIONES Y ÚLTIMOS 10 PEDIDOS -->
+      <section class="mb-5">
+        <div class="row g-4">
+          <!-- Notificaciones -->
+          <div class="col-12 col-lg-4">
+            <div class="card card-dark-gold shadow-sm h-100">
+              <div class="card-header">
+                <h5 class="mb-0">Notificaciones</h5>
+                <small class="text-muted">
+                  Cambios detectados en los <strong>últimos 10 pedidos</strong>.
+                </small>
+              </div>
+              <div class="card-body">
+                <ul id="notificationsList" class="list-unstyled mb-0 small">
+                  <!-- Notificaciones dinámicas -->
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Últimos 10 pedidos (tabla con polling) -->
+          <div class="col-12 col-lg-8">
+            <div class="card card-dark-gold shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="mb-0">Últimos 10 pedidos</h5>
+                  <small class="text-muted">
+                    Endpoint: <code>/api/pedidos/ultimos10</code> (actualiza cada 2 segundos)
+                  </small>
+                </div>
+                <div class="text-end small">
+                  <span class="text-secondary d-block">Modo: Polling</span>
+                  <span id="lastUpdateLabel" class="text-warning"></span>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-dark table-striped align-middle mb-0">
+                    <thead class="table-header-gold">
+                      <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Costo total ($)</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                      </tr>
+                    </thead>
+                    <tbody id="lastOrdersTableBody">
+                      <!-- Filas de últimos pedidos (JS) -->
+                    </tbody>
+                  </table>
+                </div>
+                <div id="lastOrdersMessage" class="mt-2 small"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer-dark-gold py-3 mt-auto">
+    <div class="container text-center small">
+      <span class="text-muted">Carbon-Shop &copy; <span id="footerYear"></span></span>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (opcional, solo para componentes) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Lógica de la app -->
+  <script src="app.js"></script>
+</body>
+</html>
