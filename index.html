@@ -179,15 +179,19 @@
       </section>
 
       <!-- RESUMEN DE PEDIDO -->
+            
       <section class="mb-4">
         <div class="card card-dark-gold shadow-sm">
           <div class="card-header">
-            <h5 class="mb-0">Resumen de pedido</h5>
+            <h5 class="mb-0">Resumen y detalle de pedido</h5>
           </div>
           <div class="card-body">
             <p class="text-muted small">
-              Endpoint: <code>/api/pedidos/resumen</code>  
-              Ingresa el ID de pedido para ver la información principal.
+              Endpoints:
+              <code>/api/pedidos/resumen</code> y
+              <code>/api/pedidos/detalle-completo</code><br />
+              Ingresa el <strong>ID de pedido</strong> para ver su resumen y el
+              <strong>desglose completo</strong>.
             </p>
 
             <form id="resumenForm" class="row gy-3 mb-3">
@@ -196,6 +200,7 @@
                 <input
                   type="number"
                   min="1"
+                  step="1"
                   class="form-control"
                   id="pedidoIdResumen"
                   placeholder="Ej. 1"
@@ -204,11 +209,12 @@
               </div>
               <div class="col-12 col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-warning">
-                  Obtener resumen
+                  Obtener resumen y detalle
                 </button>
               </div>
             </form>
 
+            <!-- Resumen (cabecera) -->
             <div class="table-responsive d-none" id="resumenTableWrapper">
               <table class="table table-dark table-striped align-middle mb-0">
                 <thead class="table-header-gold">
@@ -222,6 +228,25 @@
                 </thead>
                 <tbody id="resumenTableBody">
                   <!-- Fila generada por JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- NUEVO: Detalle completo del pedido -->
+            <div class="table-responsive d-none mt-3" id="detalleTableWrapper">
+              <h6 class="text-warning mb-2">Detalle del pedido</h6>
+              <table class="table table-dark table-striped align-middle mb-0">
+                <thead class="table-header-gold">
+                  <tr>
+                    <th>#</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Costo unitario ($)</th>
+                    <th>Subtotal ($)</th>
+                  </tr>
+                </thead>
+                <tbody id="detalleTableBody">
+                  <!-- Filas generadas por JS -->
                 </tbody>
               </table>
             </div>
