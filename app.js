@@ -24,6 +24,10 @@ const resumenTableWrapper = document.getElementById("resumenTableWrapper");
 const resumenTableBody = document.getElementById("resumenTableBody");
 const resumenMessage = document.getElementById("resumenMessage");
 
+// NUEVO: elementos para detalle
+const detalleTableWrapper = document.getElementById("detalleTableWrapper");
+const detalleTableBody = document.getElementById("detalleTableBody");
+
 const lastOrdersTableBody = document.getElementById("lastOrdersTableBody");
 const lastOrdersMessage = document.getElementById("lastOrdersMessage");
 const lastUpdateLabel = document.getElementById("lastUpdateLabel");
@@ -100,6 +104,22 @@ function addNotification(text, type = "info") {
   while (notificationsList.children.length > maxItems) {
     notificationsList.removeChild(notificationsList.lastChild);
   }
+}
+
+// NUEVO: forzar que un input solo acepte enteros
+function enforceIntegerOnly(input) {
+  if (!input) return;
+  input.setAttribute("inputmode", "numeric");
+  input.setAttribute("step", "1");
+  input.addEventListener("input", () => {
+    let value = input.value;
+    if (!value) {
+      return;
+    }
+    // elimina todo lo que no sea dígito
+    value = value.replace(/[^\d]/g, "");
+    input.value = value;
+  });
 }
 
 // =======================
@@ -295,6 +315,13 @@ async function handleResumenSubmit(ev) {
     resumenTableWrapper.classList.add("d-none");
     resumenTableBody.innerHTML = "";
 
+    // También ocultar/limpiar el detalle mientras carga
+    if (detalleTableWrapper && detalleTableBody) {
+      detalleTableWrapper.classList.add("d-none");
+      detalleTableBody.innerHTML = "";
+    }
+
+    // 1) Resumen
     const res = await fetch(`${API_BASE}/api/pedidos/resumen`, {
       method: "POST",
       headers: {
@@ -338,10 +365,85 @@ async function handleResumenSubmit(ev) {
     resumenTableBody.appendChild(tr);
     resumenTableWrapper.classList.remove("d-none");
 
-    setMessage(resumenMessage, "Resumen cargado correctamente.", "success");
+    setMessage(resumenMessage, "Resumen cargado correctamente. Consultando detalle...", "success");
+
+    // 2) Detalle completo usando el nuevo endpoint
+    await loadPedidoDetalleCompleto(Number(pedidoId));
   } catch (err) {
     console.error(err);
     setMessage(resumenMessage, "Error al obtener el resumen del pedido.", "error");
+  }
+}
+
+// =======================
+// NUEVO: Detalle completo del pedido
+// =======================
+async function loadPedidoDetalleCompleto(pedidoId) {
+  if (!detalleTableWrapper || !detalleTableBody) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/pedidos/detalle-completo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ pedido_id: Number(pedidoId) }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      const msg = data.mensaje || data.error || "No se pudo obtener el detalle del pedido.";
+      addNotification(`Error al obtener detalle del pedido #${pedidoId}: ${msg}`, "error");
+      return;
+    }
+
+    const detalle = data.detalle || [];
+    detalleTableBody.innerHTML = "";
+
+    if (detalle.length === 0) {
+      addNotification(`Pedido #${pedidoId} no tiene detalle registrado.`, "warning");
+      detalleTableWrapper.classList.add("d-none");
+      return;
+    }
+
+    detalle.forEach((linea, index) => {
+      const tr = document.createElement("tr");
+
+      const tdIndex = document.createElement("td");
+      tdIndex.textContent = index + 1;
+
+      const tdProducto = document.createElement("td");
+      tdProducto.textContent =
+        linea.producto_nombre   // lo que realmente manda tu API
+        || linea.nombre_producto
+        || linea.nombre
+        || linea.producto
+        || "N/D";
+
+
+      const tdCantidad = document.createElement("td");
+      tdCantidad.textContent = linea.cantidad;
+
+      const tdCostoUnit = document.createElement("td");
+      tdCostoUnit.textContent = formatCurrency(linea.costo_unitario);
+
+      const tdSubtotal = document.createElement("td");
+      tdSubtotal.textContent = formatCurrency(linea.subtotal);
+
+      tr.appendChild(tdIndex);
+      tr.appendChild(tdProducto);
+      tr.appendChild(tdCantidad);
+      tr.appendChild(tdCostoUnit);
+      tr.appendChild(tdSubtotal);
+
+      detalleTableBody.appendChild(tr);
+    });
+
+    detalleTableWrapper.classList.remove("d-none");
+    addNotification(`Detalle del pedido #${pedidoId} cargado.`, "info");
+  } catch (err) {
+    console.error(err);
+    addNotification(`Error de red al consultar detalle del pedido #${pedidoId}.`, "error");
   }
 }
 
@@ -434,11 +536,7 @@ async function loadLastOrders(isFromPolling = false) {
 
     const now = new Date();
     lastUpdateLabel.textContent = `Última actualización: ${now.toLocaleTimeString()}`;
-    if (!isFromPolling) {
-      setMessage(lastOrdersMessage, "", "info");
-    } else {
-      setMessage(lastOrdersMessage, "", "info");
-    }
+    setMessage(lastOrdersMessage, "", "info");
   } catch (err) {
     console.error(err);
     setMessage(lastOrdersMessage, "Error al cargar los últimos pedidos.", "error");
@@ -464,6 +562,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Cargar datos iniciales
   loadInventory();
   loadLastOrders(false);
+
+  // Forzar que ciertos campos sean solo enteros
+  enforceIntegerOnly(pedidoIdResumenInput);
+  enforceIntegerOnly(pedidoIdEstadoInput);
 
   // Botón recargar inventario
   if (btnReloadInventory) {
